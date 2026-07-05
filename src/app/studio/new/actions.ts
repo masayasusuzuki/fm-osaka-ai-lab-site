@@ -7,6 +7,15 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  if (err && typeof err === "object" && "message" in err && typeof err.message === "string") {
+    return err.message;
+  }
+  return JSON.stringify(err);
+}
+
 export async function transcribeAudio(formData: FormData): Promise<{ text: string; error?: string }> {
   try {
     const file = formData.get("audio") as File;
@@ -21,7 +30,7 @@ export async function transcribeAudio(formData: FormData): Promise<{ text: strin
     return { text: transcription.text };
   } catch (err) {
     console.error(err);
-    return { text: "", error: "文字起こしに失敗しました" };
+    return { text: "", error: `文字起こしに失敗しました: ${getErrorMessage(err)}` };
   }
 }
 
@@ -99,7 +108,7 @@ ${transcript}`;
       location: "",
       broadcastDate: new Date().toISOString().split("T")[0],
       programName: "iDoBuddy・イドバタニュース",
-      error: "記事生成に失敗しました",
+      error: `記事生成に失敗しました: ${getErrorMessage(err)}`,
     };
   }
 }
@@ -229,7 +238,7 @@ export async function generateImages(params: {
     return {
       thumbnailUrl: "",
       articleImageUrls: [],
-      error: "画像生成に失敗しました",
+      error: `画像生成に失敗しました: ${getErrorMessage(err)}`,
     };
   }
 }
@@ -260,7 +269,7 @@ export async function regenerateImage(
     return { url };
   } catch (err) {
     console.error(err);
-    return { error: "画像生成に失敗しました" };
+    return { error: `画像生成に失敗しました: ${getErrorMessage(err)}` };
   }
 }
 
@@ -337,7 +346,7 @@ export async function saveArticle(
     return { slug };
   } catch (err) {
     console.error(err);
-    return { error: "保存に失敗しました" };
+    return { error: `保存に失敗しました: ${getErrorMessage(err)}` };
   }
 }
 
@@ -365,7 +374,7 @@ export async function saveArticleWithImages(
     });
   } catch (err) {
     console.error(err);
-    return { error: "画像アップロードまたは保存に失敗しました" };
+    return { error: `画像アップロードまたは保存に失敗しました: ${getErrorMessage(err)}` };
   }
 }
 
@@ -379,6 +388,6 @@ export async function uploadImageToMicroCMS(formData: FormData): Promise<{ url?:
     return { url };
   } catch (err) {
     console.error(err);
-    return { error: "画像アップロードに失敗しました" };
+    return { error: `画像アップロードに失敗しました: ${getErrorMessage(err)}` };
   }
 }
