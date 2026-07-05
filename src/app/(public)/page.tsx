@@ -52,22 +52,7 @@ export default async function Home() {
           title="最新記事"
           description="放送音声や企画内容をもとに AI が生成したブログ記事。SNS投稿文も併せて公開しています。"
           accent="blue"
-          action={
-            <div className="hidden items-center gap-4 sm:flex">
-              <Link
-                href="/studio/new"
-                className="flex items-center gap-1 rounded-full bg-fm-pink px-4 py-2 text-xs font-black text-black transition-transform hover:scale-105"
-              >
-                記事を作成 <ArrowRight className="h-3 w-3" />
-              </Link>
-              <Link
-                href="/blog"
-                className="flex items-center gap-1 text-sm font-bold text-foreground hover:text-fm-blue"
-              >
-                すべて見る <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          }
+          centered
         />
 
         <div className="mx-auto grid max-w-2xl gap-6">
@@ -80,6 +65,17 @@ export default async function Home() {
             </FadeIn>
           ))}
         </div>
+
+        <FadeIn>
+          <div className="mt-8 flex justify-center">
+            <Link
+              href="/blog"
+              className="flex items-center gap-1 text-sm font-bold text-foreground transition-colors hover:text-fm-blue"
+            >
+              すべて見る <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </FadeIn>
       </section>
 
       {/* Banner */}

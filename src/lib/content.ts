@@ -33,6 +33,7 @@ export const episodes: Episode[] = [
     thumbnail: "https://placehold.co/800x450/F7931E/FFFFFF?text=EP02",
     publishedAt: "2026-07-21",
     accentColor: "orange",
+    locked: true,
   },
   {
     id: "ep03",
@@ -47,6 +48,7 @@ export const episodes: Episode[] = [
     thumbnail: "https://placehold.co/800x450/00AEEF/FFFFFF?text=EP03",
     publishedAt: "2026-07-28",
     accentColor: "blue",
+    locked: true,
   },
   {
     id: "ep04",
@@ -61,6 +63,7 @@ export const episodes: Episode[] = [
     thumbnail: "https://placehold.co/800x450/8DC63F/FFFFFF?text=EP04",
     publishedAt: "2026-08-04",
     accentColor: "green",
+    locked: true,
   },
 ];
 

@@ -11,6 +11,8 @@ export interface Episode {
   thumbnail: string;
   publishedAt: string;
   accentColor: AccentColor;
+  /** true の場合、公開前としてカードに鍵アイコンを表示しクリック不可にする */
+  locked?: boolean;
 }
 
 export interface BlogPost {

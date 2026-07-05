@@ -6,7 +6,7 @@ import { FadeIn } from "@/components/FadeIn";
 import { getBlogPostsByEpisodeAsync } from "@/lib/articles";
 import { episodes, getEpisodeBySlug } from "@/lib/content";
 import { cn } from "@/lib/utils";
-import { Episode01Demo } from "@/components/episodes/Episode01Demo";
+import { Episode01Requirements } from "@/components/episodes/Episode01Requirements";
 import { Episode02Demo } from "@/components/episodes/Episode02Demo";
 import { Episode03Demo } from "@/components/episodes/Episode03Demo";
 import { Episode04Demo } from "@/components/episodes/Episode04Demo";
@@ -117,14 +117,25 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
         </div>
       </FadeIn>
 
-      <FadeIn>
-        <div className="mt-10">
-          {episode.episodeNumber === 1 && <Episode01Demo />}
-          {episode.episodeNumber === 2 && <Episode02Demo />}
-          {episode.episodeNumber === 3 && <Episode03Demo />}
-          {episode.episodeNumber === 4 && <Episode04Demo />}
-        </div>
-      </FadeIn>
+      {/* EP01: 記事作成機能の要件定義解説（AI初学者向け） */}
+      {episode.episodeNumber === 1 && (
+        <FadeIn>
+          <div className="mt-10">
+            <Episode01Requirements />
+          </div>
+        </FadeIn>
+      )}
+
+      {/* EP01 のデモセクションは要件定義解説に置き換えたため表示しない */}
+      {episode.episodeNumber !== 1 && (
+        <FadeIn>
+          <div className="mt-10">
+            {episode.episodeNumber === 2 && <Episode02Demo />}
+            {episode.episodeNumber === 3 && <Episode03Demo />}
+            {episode.episodeNumber === 4 && <Episode04Demo />}
+          </div>
+        </FadeIn>
+      )}
 
       {relatedPosts.length > 0 && (
         <section className="mt-16">

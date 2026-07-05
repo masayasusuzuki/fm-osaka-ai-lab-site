@@ -20,8 +20,19 @@ export async function generateStaticParams() {
   }));
 }
 
+// Next.js の params は URL エンコードされたまま渡ってくるため、
+// 日本語 slug を含む場合はデコードしてから microCMS を検索する
+function decodeSlug(slug: string): string {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+}
+
 export async function generateMetadata({ params }: BlogPageProps) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeSlug(rawSlug);
   const post = await getBlogPostBySlugAsync(slug);
   if (!post) return {};
 
@@ -32,7 +43,8 @@ export async function generateMetadata({ params }: BlogPageProps) {
 }
 
 export default async function BlogPostPage({ params }: BlogPageProps) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeSlug(rawSlug);
   const [post, allPosts] = await Promise.all([
     getBlogPostBySlugAsync(slug),
     getAllBlogPosts(),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -33,6 +33,17 @@ import { Card, CardContent } from "@/components/ui/card";
 
 type Step = "upload" | "transcribe" | "generate" | "images" | "preview" | "edit";
 
+// プレビュー用に <!-- IMAGE:n --> マーカーを実際の画像タグに置き換える
+// （サーバー側 embedImagesInBody と同じ出力形式）
+function embedImagesForPreview(body: string, imageUrls: string[]): string {
+  // マーカー番号 n に対応する画像を入れる（サーバー側 embedImagesInBody と同じ挙動）
+  return body.replace(/<!--\s*IMAGE:\s*(\d+)\s*-->/g, (_, n) => {
+    const url = imageUrls[Number(n) - 1] || "";
+    if (!url) return "";
+    return `<figure class="my-8"><img src="${url}" alt="" class="w-full rounded-2xl border border-white/10 shadow-lg" /></figure>`;
+  });
+}
+
 export default function NewArticlePage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("upload");
@@ -55,6 +66,12 @@ export default function NewArticlePage() {
   const [episodeSlug, setEpisodeSlug] = useState("ep01");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // プレビュー画面の本文: 画像を埋め込んだ最終形 HTML（contentEditable で直接編集できる）
+  const previewBodyHtml = useMemo(
+    () => embedImagesForPreview(article.body, tempImages.articleImageUrls),
+    [article.body, tempImages.articleImageUrls]
+  );
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -106,12 +123,16 @@ export default function NewArticlePage() {
   const handleGenerateImages = async () => {
     setLoading(true);
     setError(null);
-    const result = await generateImages(article);
+    const result = await generateImages(article, article.body);
     setLoading(false);
     if (result.error) {
       setError(result.error);
     } else {
-      setTempImages(result);
+      setTempImages({ thumbnailUrl: result.thumbnailUrl, articleImageUrls: result.articleImageUrls });
+      // DeepSeek が画像内容に合わせてマーカー位置を再配置した本文を反映
+      if (result.body) {
+        setArticle((prev) => ({ ...prev, body: result.body! }));
+      }
     }
   };
 
@@ -388,22 +409,13 @@ export default function NewArticlePage() {
                 </>}
               </button>
               {tempImages.thumbnailUrl && (
-                <>
-                  <button
-                    onClick={() => handleSave(false)}
-                    disabled={loading}
-                    className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 text-sm font-black text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    <Save className="h-4 w-4" /> 下書き保存
-                  </button>
-                  <button
-                    onClick={() => handleSave(true)}
-                    disabled={loading}
-                    className="flex h-12 items-center justify-center gap-2 rounded-xl bg-fm-pink px-6 text-sm font-black text-white transition-transform hover:scale-[1.02] disabled:opacity-50"
-                  >
-                    <Eye className="h-4 w-4" /> 公開する
-                  </button>
-                </>
+                <button
+                  onClick={() => setStep("preview")}
+                  disabled={loading}
+                  className="flex h-12 items-center justify-center gap-2 rounded-xl bg-fm-pink px-6 text-sm font-black text-white transition-transform hover:scale-[1.02] disabled:opacity-50"
+                >
+                  プレビューへ進む（編集・保存） <ArrowRight className="h-4 w-4" />
+                </button>
               )}
             </div>
 
@@ -425,6 +437,9 @@ export default function NewArticlePage() {
           <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <h2 className="text-lg font-black tracking-wide text-gray-900">プレビュー</h2>
             <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-fm-pink text-fm-pink">
+                クリックで直接編集できます
+              </Badge>
               <Badge variant="outline" className="border-amber-500 text-amber-500">
                 下書きプレビュー
               </Badge>
@@ -453,7 +468,12 @@ export default function NewArticlePage() {
                       AI生成記事
                     </Badge>
                   </div>
-                  <h1 className="mt-4 text-2xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
+                  <h1
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => setArticle({ ...article, title: e.currentTarget.textContent ?? "" })}
+                    className="mt-4 rounded-lg text-2xl font-black leading-tight text-white outline-none transition-shadow focus:ring-2 focus:ring-fm-pink/70 sm:text-4xl lg:text-5xl"
+                  >
                     {article.title}
                   </h1>
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/60">
@@ -478,7 +498,12 @@ export default function NewArticlePage() {
           <Card className="border-gray-200 bg-white shadow-2xl">
             <CardContent className="p-6 sm:p-10">
               {article.excerpt && (
-                <p className="text-lg font-medium leading-relaxed text-gray-800">
+                <p
+                  contentEditable
+                  suppressContentEditableWarning
+                  onBlur={(e) => setArticle({ ...article, excerpt: e.currentTarget.textContent ?? "" })}
+                  className="rounded-lg text-lg font-medium leading-relaxed text-gray-800 outline-none transition-shadow focus:ring-2 focus:ring-fm-pink/40"
+                >
                   {article.excerpt}
                 </p>
               )}
@@ -490,8 +515,17 @@ export default function NewArticlePage() {
               </div>
 
               <div
-                className="prose prose-lg max-w-none text-gray-800 prose-headings:font-black prose-headings:text-gray-900 prose-a:text-fm-pink hover:prose-a:text-fm-pink/80 prose-strong:text-gray-900 prose-blockquote:border-l-fm-pink prose-blockquote:bg-gray-50 prose-blockquote:py-2 prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:font-medium prose-blockquote:not-italic prose-li:marker:text-fm-pink prose-img:rounded-2xl prose-img:border prose-img:border-gray-200"
-                dangerouslySetInnerHTML={{ __html: article.body.replace(/<!--\s*IMAGE:\s*\d+\s*-->/g, "") }}
+                contentEditable
+                suppressContentEditableWarning
+                onBlur={(e) => {
+                  // 実際に編集されたときだけ反映（クリックしただけで IMAGE マーカーを壊さない）
+                  const html = e.currentTarget.innerHTML;
+                  if (html !== previewBodyHtml) {
+                    setArticle({ ...article, body: html });
+                  }
+                }}
+                className="prose prose-lg max-w-none rounded-lg text-gray-800 outline-none transition-shadow focus:ring-2 focus:ring-fm-pink/40 prose-headings:font-black prose-headings:text-gray-900 prose-a:text-fm-pink hover:prose-a:text-fm-pink/80 prose-strong:text-gray-900 prose-blockquote:border-l-fm-pink prose-blockquote:bg-gray-50 prose-blockquote:py-2 prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:font-medium prose-blockquote:not-italic prose-li:marker:text-fm-pink prose-img:rounded-2xl prose-img:border prose-img:border-gray-200"
+                dangerouslySetInnerHTML={{ __html: previewBodyHtml }}
               />
 
               <div className="mt-10 rounded-2xl border border-gray-200 bg-gray-50 p-5">
@@ -510,7 +544,7 @@ export default function NewArticlePage() {
             </CardContent>
           </Card>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setStep("images")}
               className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 text-sm font-black text-gray-700 transition-colors hover:bg-gray-50"
@@ -519,9 +553,23 @@ export default function NewArticlePage() {
             </button>
             <button
               onClick={() => setStep("edit")}
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-fm-pink px-6 text-sm font-black text-white transition-transform hover:scale-[1.02]"
+              className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 text-sm font-black text-gray-700 transition-colors hover:bg-gray-50"
             >
-              編集・保存へ進む <ArrowRight className="h-4 w-4" />
+              HTMLを直接編集 <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => handleSave(false)}
+              disabled={loading}
+              className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 text-sm font-black text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} 下書き保存
+            </button>
+            <button
+              onClick={() => handleSave(true)}
+              disabled={loading}
+              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-fm-pink px-6 text-sm font-black text-white transition-transform hover:scale-[1.02] disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />} 公開する
             </button>
           </div>
         </div>

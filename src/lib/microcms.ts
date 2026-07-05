@@ -51,8 +51,11 @@ export async function getArticleBySlug(slug: string) {
   return res.contents[0] ?? null;
 }
 
-export type MicroCMSArticleInput = Omit<MicroCMSArticle, "thumbnail"> & {
+// 書き込み時の型。published（日時型）に null を渡すと microCMS が 400 を返す（create / update とも）。
+// 下書き作成時はフィールドごと省略し、非公開化（クリア）は空文字 "" を PATCH する
+export type MicroCMSArticleInput = Omit<MicroCMSArticle, "thumbnail" | "published"> & {
   thumbnail?: string;
+  published?: string;
 };
 
 export async function createArticle(

@@ -72,7 +72,7 @@ export function SectionHeader({
           {description && (
             <p
               className={cn(
-                "mt-3 max-w-2xl text-muted-foreground",
+                "mt-3 max-w-4xl text-muted-foreground",
                 centered && "mx-auto"
               )}
             >

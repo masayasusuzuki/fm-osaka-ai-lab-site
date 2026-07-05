@@ -382,41 +382,78 @@ function EpisodesPanel() {
         }}
       />
 
-      {/* Turntable platter */}
-      <motion.div
-        drag
-        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-        onDrag={(_, info) => rotation.set(rotation.get() + info.delta.x * 1.5)}
-        className="pointer-events-auto absolute right-[-60px] top-1/2 z-0 h-[340px] w-[340px] -translate-y-1/2 cursor-grab rounded-full active:cursor-grabbing sm:right-[-20px] lg:h-[380px] lg:w-[380px]"
-        style={{
-          rotate,
-          background: `
-            radial-gradient(circle, #0a0a0e 0 22%, transparent 23%),
-            repeating-radial-gradient(circle, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.07) 1px, transparent 2px, transparent 10px),
-            linear-gradient(145deg, #181820, #0d0d12)
-          `,
-          boxShadow:
-            "inset 0 0 70px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08), 0 30px 80px rgba(0,0,0,0.5)",
-        }}
-      >
-        {/* Strobe dots */}
-        <div className="absolute inset-0 rounded-full opacity-30">
-          {[...Array(24)].map((_, i) => (
+      {/* Turntable (static rim + rotating vinyl + static sheen + tonearm) */}
+      <div className="absolute right-[-60px] top-1/2 z-0 h-[340px] w-[340px] -translate-y-1/2 sm:right-[-20px] lg:h-[400px] lg:w-[400px]">
+        {/* Metal platter rim (static, brushed metal) */}
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background:
+              "conic-gradient(from 0deg, #43434e, #17171d 20%, #4a4a56 40%, #131318 60%, #3d3d48 80%, #43434e)",
+            boxShadow:
+              "0 30px 90px rgba(0,0,0,0.65), inset 0 2px 5px rgba(255,255,255,0.28), inset 0 -5px 14px rgba(0,0,0,0.85)",
+          }}
+        />
+        {/* Strobe dots on rim (static) */}
+        <div className="absolute inset-0 rounded-full">
+          {[...Array(36)].map((_, i) => (
             <div
               key={i}
-              className="absolute left-1/2 top-2 h-1 w-1 -translate-x-1/2 rounded-full bg-white/60"
-              style={{ transformOrigin: "50% 170px", transform: `rotate(${i * 15}deg)` }}
+              className="absolute left-1/2 top-[5px] h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-white/50"
+              style={{ transformOrigin: "50% calc(min(170px, 195px))", transform: `rotate(${i * 10}deg)` }}
             />
           ))}
         </div>
-        {/* Label */}
-        <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-fm-pink/20 to-fm-blue/20 backdrop-blur-sm">
-          <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fm-pink shadow-[0_0_20px_rgba(233,30,140,0.9)]" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-[9px] font-black tracking-[0.2em] text-white/50">FM OSAKA</span>
+
+        {/* Rotating vinyl */}
+        <motion.div
+          drag
+          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+          onDrag={(_, info) => rotation.set(rotation.get() + info.delta.x * 1.5)}
+          className="pointer-events-auto absolute inset-[16px] cursor-grab rounded-full active:cursor-grabbing"
+          style={{
+            rotate,
+            background: `
+              repeating-radial-gradient(circle, rgba(255,255,255,0.085) 0, rgba(255,255,255,0.085) 1px, rgba(0,0,0,0.35) 2px, transparent 3px, transparent 5px),
+              repeating-radial-gradient(circle, transparent 0, transparent 22px, rgba(255,255,255,0.05) 23px, transparent 24px, transparent 46px),
+              radial-gradient(circle, #16161c 0 20%, #0b0b0f 60%, #101016 100%)
+            `,
+            boxShadow: "inset 0 0 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.8)",
+          }}
+        >
+          {/* Label（レコード盤面ラベル） */}
+          <div
+            className="absolute left-1/2 top-1/2 h-[34%] w-[34%] -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle at 38% 32%, rgba(255,255,255,0.22), transparent 45%), conic-gradient(from 40deg, #E91E8C, #B0176D 30%, #E91E8C 55%, #8f1258 80%, #E91E8C)",
+              boxShadow: "inset 0 0 14px rgba(0,0,0,0.45), 0 0 0 2px rgba(0,0,0,0.6)",
+            }}
+          >
+            {/* 円周テキスト */}
+            <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
+              <defs>
+                <path id="labelArc" d="M 50,50 m -34,0 a 34,34 0 1,1 68,0 a 34,34 0 1,1 -68,0" />
+              </defs>
+              <text className="fill-white/85 text-[8.5px] font-black tracking-[0.32em]">
+                <textPath href="#labelArc">FM OSAKA • AI LAB • 851 •</textPath>
+              </text>
+            </svg>
+            {/* スピンドル */}
+            <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-b from-[#e8e8ee] to-[#7a7a85] shadow-[0_0_6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.8)]" />
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+
+        {/* Static light sheen（回転しない光の反射 = リアルさの要） */}
+        <div
+          className="pointer-events-none absolute inset-[16px] rounded-full"
+          style={{
+            background:
+              "conic-gradient(from 200deg, rgba(255,255,255,0.16) 0deg, transparent 45deg, transparent 150deg, rgba(255,255,255,0.07) 185deg, transparent 235deg, transparent 360deg)",
+          }}
+        />
+
+      </div>
 
       {/* Glows */}
       <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-fm-pink/12 blur-[90px]" />
@@ -434,14 +471,11 @@ function EpisodesPanel() {
       {/* Header */}
       <div className="relative flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-fm-pink/15">
-            <Disc className="h-5 w-5 text-fm-pink" />
-          </div>
-          <span className="text-[12px] font-black tracking-[0.22em] text-fm-pink [text-shadow:0_0_18px_rgba(255,42,163,0.45)]">
+          <span className="font-[family-name:var(--font-display)] text-[12px] tracking-[0.26em] text-fm-pink [text-shadow:0_0_18px_rgba(255,42,163,0.45)]">
             EPISODES
           </span>
         </div>
-        <div className="hidden items-center gap-4 rounded-lg border border-white/10 bg-black/30 px-4 py-1.5 text-[10px] font-bold tracking-wider text-white/50 sm:flex">
+        <div className="hidden items-center gap-4 rounded-lg border border-white/10 bg-black/30 px-4 py-1.5 font-mono text-[10px] font-bold tracking-wider text-white/50 sm:flex">
           <span>BPM 128</span>
           <span className="text-fm-pink">KEY 7A</span>
           <span>-04:12</span>
@@ -450,8 +484,29 @@ function EpisodesPanel() {
 
       {/* Main text */}
       <div className="relative z-10 mt-4">
-        <p className="text-8xl font-black leading-none text-white sm:text-9xl">4</p>
-        <p className="mt-2 text-2xl font-black tracking-[0.08em] text-white/90">回のAI実験</p>
+        {/* ゴーストテキスト（アウトラインのみ） */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-10 left-16 select-none text-[120px] font-black italic leading-none tracking-tighter opacity-[0.06] sm:text-[150px]"
+          style={{ WebkitTextStroke: "1.5px rgba(255,255,255,0.9)", color: "transparent" }}
+        >
+          LAB
+        </span>
+        <div className="flex items-end gap-3">
+          <p
+            className="font-[family-name:var(--font-display)] bg-gradient-to-br from-white via-white to-fm-pink bg-clip-text text-8xl italic leading-none tracking-tight text-transparent sm:text-9xl"
+            style={{ filter: "drop-shadow(0 0 28px rgba(233,30,140,0.35))" }}
+          >
+            4
+          </p>
+          <span className="mb-2 inline-block -rotate-6 rounded-md bg-fm-pink px-2 py-0.5 text-[10px] font-black tracking-[0.2em] text-black shadow-[0_0_18px_rgba(233,30,140,0.6)]">
+            EXPERIMENTS
+          </span>
+        </div>
+        <p className="mt-2 text-2xl font-black tracking-[0.14em] text-white/95">
+          回のAI実験
+          <span className="ml-3 inline-block h-[3px] w-16 -translate-y-1 rounded-full bg-gradient-to-r from-fm-pink to-fm-blue align-middle" />
+        </p>
         <p className="mt-3 max-w-md text-[14px] leading-[1.9] text-white/[0.7]">
           音声→ブログ生成、情報収集、重複チェック・リマインド、AIゲスト対談。ラジオ制作の現場にAIを組み込んだ4つのテーマ。
         </p>
@@ -541,15 +596,12 @@ function ToolsCard() {
       </div>
 
       <div className="relative flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-fm-orange/15">
-          <Zap className="h-5 w-5 text-fm-orange" />
-        </div>
         <span className="text-[10px] font-black tracking-[0.2em] text-white/40">AI LAB TOOLS</span>
       </div>
 
       <div className="relative mt-5">
-        <p className="text-4xl font-black leading-none tracking-[0.02em] text-white">AI</p>
-        <p className="text-sm font-black tracking-[0.2em] text-fm-orange">TOOLS</p>
+        <p className="font-[family-name:var(--font-display)] text-4xl leading-none tracking-[0.02em] text-white">AI</p>
+        <p className="font-[family-name:var(--font-display)] text-sm tracking-[0.24em] text-fm-orange">TOOLS</p>
       </div>
 
       <div className="relative mt-5 grid grid-cols-4 gap-2">
@@ -610,14 +662,11 @@ function PossibilitiesCard() {
       </div>
 
       <div className="relative flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-fm-blue/15">
-          <InfinityIcon className="h-5 w-5 text-fm-blue" />
-        </div>
         <span className="text-[10px] font-black tracking-[0.2em] text-white/40">NEW VALUE</span>
       </div>
 
       <div className="relative mt-5">
-        <p className="text-2xl font-black tracking-[0.08em] text-white">POSSIBILITIES</p>
+        <p className="font-[family-name:var(--font-display)] text-2xl tracking-[0.08em] text-white">POSSIBILITIES</p>
         <p className="mt-2 text-[14px] leading-[1.9] text-white/[0.7]">
           リスナー・スタッフ双方に新しい価値を。
         </p>
@@ -658,16 +707,13 @@ function AutomationCard() {
       <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-fm-green/12 blur-[60px]" />
 
       <div className="relative flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-fm-green/15">
-          <Clock className="h-5 w-5 text-fm-green" />
-        </div>
         <span className="text-[10px] font-black tracking-[0.2em] text-white/40">AUTOMATION</span>
       </div>
 
       <div className="relative mt-5 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="text-4xl font-black leading-none tracking-[0.02em] text-white">24h</p>
-          <p className="text-sm font-black tracking-[0.2em] text-fm-green">AUTOMATION</p>
+          <p className="font-[family-name:var(--font-display)] text-4xl leading-none tracking-[0.02em] text-white">24h</p>
+          <p className="font-[family-name:var(--font-display)] text-sm tracking-[0.24em] text-fm-green">AUTOMATION</p>
           <p className="mt-2 max-w-[200px] text-[13px] leading-[1.9] text-white/[0.7]">
             放送後すぐにブログ・SNS投稿・サムネイルを生成し、サイトへ公開。
           </p>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP, Geist_Mono } from "next/font/google";
+import { Noto_Sans_JP, Geist_Mono, Archivo_Black } from "next/font/google";
 import "./globals.css";
 
 const notoSansJp = Noto_Sans_JP({
@@ -12,6 +12,14 @@ const notoSansJp = Noto_Sans_JP({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// 見出し・数字用のディスプレイフォント（ターンテーブルUIなど）
+const archivoBlack = Archivo_Black({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -29,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${notoSansJp.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${notoSansJp.variable} ${geistMono.variable} ${archivoBlack.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-[#030305] font-sans text-white">
         {children}
