@@ -80,9 +80,12 @@ export default async function Home() {
 
       {/* Banner */}
       <section className="mx-auto w-full max-w-[90rem] px-2 sm:px-4 lg:px-5">
-        <FadeIn>
-          <BannerCarousel banners={banners} />
-        </FadeIn>
+        {/* PC表示のみ幅を絞る（モバイルはフル幅のまま） */}
+        <div className="mx-auto w-full sm:max-w-5xl">
+          <FadeIn>
+            <BannerCarousel banners={banners} />
+          </FadeIn>
+        </div>
       </section>
     </div>
   );
