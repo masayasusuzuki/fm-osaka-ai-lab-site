@@ -6,8 +6,9 @@ import Image from "next/image";
 import {
   transcribeAudio,
   generateArticle,
-  generateAndUploadImages,
-  saveArticle,
+  generateImages,
+  regenerateImage,
+  saveArticleWithImages,
   GeneratedArticle,
   GeneratedImages,
 } from "./actions";
@@ -47,7 +48,7 @@ export default function NewArticlePage() {
     broadcastDate: new Date().toISOString().split("T")[0],
     programName: "iDoBuddy・イドバタニュース",
   });
-  const [generatedImages, setGeneratedImages] = useState<GeneratedImages>({
+  const [tempImages, setTempImages] = useState<GeneratedImages>({
     thumbnailUrl: "",
     articleImageUrls: [],
   });
@@ -105,26 +106,42 @@ export default function NewArticlePage() {
   const handleGenerateImages = async () => {
     setLoading(true);
     setError(null);
-    const result = await generateAndUploadImages(article);
+    const result = await generateImages(article);
     setLoading(false);
     if (result.error) {
       setError(result.error);
     } else {
-      setGeneratedImages(result);
-      setStep("preview");
+      setTempImages(result);
+    }
+  };
+
+  const handleRegenerateImage = async (type: "thumbnail" | "article", index: number) => {
+    setLoading(true);
+    setError(null);
+    const result = await regenerateImage(type, index, article);
+    setLoading(false);
+    if (result.error || !result.url) {
+      setError(result.error || "画像生成に失敗しました");
+      return;
+    }
+    if (type === "thumbnail") {
+      setTempImages((prev) => ({ ...prev, thumbnailUrl: result.url! }));
+    } else {
+      setTempImages((prev) => {
+        const urls = [...prev.articleImageUrls];
+        urls[index] = result.url!;
+        return { ...prev, articleImageUrls: urls };
+      });
     }
   };
 
   const handleSave = async (published: boolean) => {
     setLoading(true);
     setError(null);
-    const result = await saveArticle({
-      ...article,
-      published,
-      episodeSlug,
-      thumbnailUrl: generatedImages.thumbnailUrl,
-      articleImageUrls: generatedImages.articleImageUrls,
-    });
+    const result = await saveArticleWithImages(
+      { ...article, published, episodeSlug },
+      tempImages
+    );
     setLoading(false);
     if (result.error) {
       setError(result.error);
@@ -132,6 +149,8 @@ export default function NewArticlePage() {
       router.push("/studio/articles");
     }
   };
+
+
 
   const stepLabels: { step: Step; label: string }[] = [
     { step: "upload", label: "1. アップロード" },
@@ -281,60 +300,123 @@ export default function NewArticlePage() {
       )}
 
       {step === "images" && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-          <h2 className="text-lg font-black tracking-wide text-gray-900">画像を生成</h2>
-          <p className="mt-2 text-sm text-gray-500">
-            記事のサムネイルと本文用画像を AI で生成します。
-          </p>
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-black tracking-wide text-gray-900">画像を生成</h2>
+              {!tempImages.thumbnailUrl && !loading && (
+                <span className="text-xs font-bold text-gray-400">まだ画像は生成されていません</span>
+              )}
+            </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-black text-gray-500">タイトル</p>
-              <p className="mt-1 text-sm font-bold text-gray-900">{article.title || "（未生成）"}</p>
+            {/* Article preview */}
+            <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-6">
+              <p className="text-xs font-black text-gray-500">生成された記事</p>
+              <h3 className="mt-2 text-base font-bold text-gray-900">{article.title}</h3>
+              <p className="mt-2 text-sm text-gray-600 line-clamp-3">{article.excerpt}</p>
+              <div
+                className="prose prose-sm mt-4 max-w-none text-gray-700 prose-headings:font-bold prose-headings:text-gray-900 prose-strong:text-gray-900"
+                dangerouslySetInnerHTML={{ __html: article.body.replace(/<!--\s*IMAGE:\s*\d+\s*-->/g, "") }}
+              />
             </div>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-black text-gray-500">キーワード</p>
-              <p className="mt-1 text-sm font-bold text-gray-900">
-                {article.mainKeyword1 || "-"} / {article.mainKeyword2 || "-"}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-black text-gray-500">地域</p>
-              <p className="mt-1 text-sm font-bold text-gray-900">{article.location || "-"}</p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-xs font-black text-gray-500">放送日</p>
-              <p className="mt-1 text-sm font-bold text-gray-900">{article.broadcastDate}</p>
-            </div>
-          </div>
 
-          <div className="mt-6 flex gap-3">
-            <button
-              onClick={() => setStep("generate")}
-              className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 text-sm font-black text-gray-700 transition-colors hover:bg-gray-50"
-            >
-              <ArrowLeft className="h-4 w-4" /> 戻る
-            </button>
-            <button
-              onClick={handleGenerateImages}
-              disabled={loading}
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-fm-pink px-6 text-sm font-black text-white transition-transform hover:scale-[1.02] disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>
-                <ImageIcon className="h-4 w-4" /> 画像を生成（4枚）
-              </>}
-            </button>
-          </div>
+            {/* Generated images */}
+            {tempImages.thumbnailUrl && (
+              <div className="mt-6 space-y-6">
+                <div>
+                  <p className="text-xs font-black text-gray-500">サムネイル</p>
+                  <div className="relative mt-2 aspect-[16/9] w-full overflow-hidden rounded-xl border border-gray-200">
+                    <Image
+                      src={tempImages.thumbnailUrl}
+                      alt="thumbnail"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 800px"
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleRegenerateImage("thumbnail", 0)}
+                    disabled={loading}
+                    className="mt-2 flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <RefreshCw className="h-3 w-3" /> 再生成
+                  </button>
+                </div>
 
-          {loading && (
-            <div className="mt-6 rounded-xl border border-fm-pink/20 bg-fm-pink/5 p-4">
-              <div className="flex items-center gap-3">
-                <Loader2 className="h-5 w-5 animate-spin text-fm-pink" />
-                <p className="text-sm font-bold text-gray-900">画像を生成・microCMSにアップロード中...</p>
+                <div>
+                  <p className="text-xs font-black text-gray-500">本文画像</p>
+                  <div className="mt-2 grid gap-4 sm:grid-cols-3">
+                    {tempImages.articleImageUrls.map((url, i) => (
+                      <div key={i} className="space-y-2">
+                        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-gray-200">
+                          <Image
+                            src={url}
+                            alt={`article image ${i + 1}`}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 1024px) 33vw, 260px"
+                          />
+                        </div>
+                        <button
+                          onClick={() => handleRegenerateImage("article", i)}
+                          disabled={loading}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                        >
+                          <RefreshCw className="h-3 w-3" /> 再生成
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <p className="mt-1 pl-8 text-xs text-gray-500">1枚あたり15〜30秒かかる場合があります</p>
+            )}
+
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => setStep("generate")}
+                className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 text-sm font-black text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                <ArrowLeft className="h-4 w-4" /> 戻る
+              </button>
+              <button
+                onClick={handleGenerateImages}
+                disabled={loading}
+                className="flex h-12 items-center justify-center gap-2 rounded-xl bg-fm-pink px-6 text-sm font-black text-white transition-transform hover:scale-[1.02] disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>
+                  <ImageIcon className="h-4 w-4" /> {tempImages.thumbnailUrl ? "画像を作り直す" : "画像を生成（4枚）"}
+                </>}
+              </button>
+              {tempImages.thumbnailUrl && (
+                <>
+                  <button
+                    onClick={() => handleSave(false)}
+                    disabled={loading}
+                    className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 text-sm font-black text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <Save className="h-4 w-4" /> 下書き保存
+                  </button>
+                  <button
+                    onClick={() => handleSave(true)}
+                    disabled={loading}
+                    className="flex h-12 items-center justify-center gap-2 rounded-xl bg-fm-pink px-6 text-sm font-black text-white transition-transform hover:scale-[1.02] disabled:opacity-50"
+                  >
+                    <Eye className="h-4 w-4" /> 公開する
+                  </button>
+                </>
+              )}
             </div>
-          )}
+
+            {loading && (
+              <div className="mt-6 rounded-xl border border-fm-pink/20 bg-fm-pink/5 p-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-fm-pink" />
+                  <p className="text-sm font-bold text-gray-900">画像を生成中...</p>
+                </div>
+                <p className="mt-1 pl-8 text-xs text-gray-500">1枚あたり15〜30秒かかる場合があります</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -350,10 +432,10 @@ export default function NewArticlePage() {
           </div>
 
           <div className="relative overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
-            {generatedImages.thumbnailUrl ? (
+            {tempImages.thumbnailUrl ? (
               <div className="relative aspect-[16/9] w-full">
                 <Image
-                  src={generatedImages.thumbnailUrl}
+                  src={tempImages.thumbnailUrl}
                   alt={article.title}
                   fill
                   className="object-cover"
@@ -503,14 +585,14 @@ export default function NewArticlePage() {
                 <label className="mb-2 block text-xs font-black tracking-wider text-gray-500">サムネイルURL</label>
                 <input
                   type="text"
-                  value={generatedImages.thumbnailUrl}
-                  onChange={(e) => setGeneratedImages({ ...generatedImages, thumbnailUrl: e.target.value })}
+                  value={tempImages.thumbnailUrl}
+                  onChange={(e) => setTempImages({ ...tempImages, thumbnailUrl: e.target.value })}
                   className="h-12 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 text-sm text-gray-900 focus:border-fm-pink/40 focus:outline-none"
                 />
-                {generatedImages.thumbnailUrl && (
+                {tempImages.thumbnailUrl && (
                   <div className="relative mt-3 aspect-[16/9] w-full max-w-md overflow-hidden rounded-xl border border-gray-200">
                     <Image
-                      src={generatedImages.thumbnailUrl}
+                      src={tempImages.thumbnailUrl}
                       alt="thumbnail"
                       fill
                       className="object-cover"
@@ -523,10 +605,10 @@ export default function NewArticlePage() {
               <div>
                 <label className="mb-2 block text-xs font-black tracking-wider text-gray-500">本文画像URL（1枚ずつ改行）</label>
                 <textarea
-                  value={generatedImages.articleImageUrls.join("\n")}
+                  value={tempImages.articleImageUrls.join("\n")}
                   onChange={(e) =>
-                    setGeneratedImages({
-                      ...generatedImages,
+                    setTempImages({
+                      ...tempImages,
                       articleImageUrls: e.target.value.split("\n").filter(Boolean),
                     })
                   }

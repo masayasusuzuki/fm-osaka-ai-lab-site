@@ -179,7 +179,7 @@ async function uploadBufferToMicroCMS(buffer: Buffer, filename: string, contentT
   return data.url;
 }
 
-export async function generateAndUploadImages(params: {
+export async function generateImages(params: {
   title: string;
   mainKeyword1: string;
   mainKeyword2: string;
@@ -220,29 +220,62 @@ export async function generateAndUploadImages(params: {
     if (!thumbnailTempUrl) throw new Error("Thumbnail generation failed");
     if (articleImageTempUrls.length !== 3) throw new Error("Article image generation failed");
 
-    const [thumbnailUrl, ...uploadedArticleUrls] = await Promise.all([
-      downloadImageAsBuffer(thumbnailTempUrl).then(({ buffer, contentType }) =>
-        uploadBufferToMicroCMS(buffer, `thumb-${Date.now()}.png`, contentType)
-      ),
-      ...articleImageTempUrls.map((url, i) =>
-        downloadImageAsBuffer(url).then(({ buffer, contentType }) =>
-          uploadBufferToMicroCMS(buffer, `article-${i + 1}-${Date.now()}.png`, contentType)
-        )
-      ),
-    ]);
-
     return {
-      thumbnailUrl,
-      articleImageUrls: uploadedArticleUrls,
+      thumbnailUrl: thumbnailTempUrl,
+      articleImageUrls: articleImageTempUrls,
     };
   } catch (err) {
     console.error(err);
     return {
       thumbnailUrl: "",
       articleImageUrls: [],
-      error: "画像生成・アップロードに失敗しました",
+      error: "画像生成に失敗しました",
     };
   }
+}
+
+export async function regenerateImage(
+  type: "thumbnail" | "article",
+  index: number,
+  params: {
+    title: string;
+    mainKeyword1: string;
+    mainKeyword2: string;
+    location: string;
+    broadcastDate: string;
+    programName: string;
+  }
+): Promise<{ url?: string; error?: string }> {
+  try {
+    const prompt = type === "thumbnail" ? buildThumbnailPrompt(params) : buildArticleImagePrompt(index, params);
+    const res = await openai.images.generate({
+      model: "gpt-image-2",
+      prompt,
+      size: "1536x1024",
+      n: 1,
+      quality: "high",
+    });
+    const url = res.data?.[0]?.url;
+    if (!url) throw new Error("Image generation failed");
+    return { url };
+  } catch (err) {
+    console.error(err);
+    return { error: "画像生成に失敗しました" };
+  }
+}
+
+async function uploadTempImagesToMicroCMS(tempImages: GeneratedImages): Promise<GeneratedImages> {
+  const [thumbnailUrl, ...uploadedArticleUrls] = await Promise.all([
+    downloadImageAsBuffer(tempImages.thumbnailUrl).then(({ buffer, contentType }) =>
+      uploadBufferToMicroCMS(buffer, `thumb-${Date.now()}.png`, contentType)
+    ),
+    ...tempImages.articleImageUrls.map((url, i) =>
+      downloadImageAsBuffer(url).then(({ buffer, contentType }) =>
+        uploadBufferToMicroCMS(buffer, `article-${i + 1}-${Date.now()}.png`, contentType)
+      )
+    ),
+  ]);
+  return { thumbnailUrl, articleImageUrls: uploadedArticleUrls };
 }
 
 function embedImagesInBody(body: string, imageUrls: string[]): string {
@@ -305,6 +338,34 @@ export async function saveArticle(
   } catch (err) {
     console.error(err);
     return { error: "保存に失敗しました" };
+  }
+}
+
+export async function saveArticleWithImages(
+  article: GeneratedArticle & {
+    published: boolean;
+    episodeSlug?: string;
+    id?: string;
+  },
+  tempImages: GeneratedImages
+): Promise<{ slug?: string; error?: string }> {
+  try {
+    if (!article.title.trim()) {
+      return { error: "タイトルを入力してください" };
+    }
+
+    const uploadedImages = await uploadTempImagesToMicroCMS(tempImages);
+    return saveArticle({
+      ...article,
+      published: article.published,
+      episodeSlug: article.episodeSlug,
+      id: article.id,
+      thumbnailUrl: uploadedImages.thumbnailUrl,
+      articleImageUrls: uploadedImages.articleImageUrls,
+    });
+  } catch (err) {
+    console.error(err);
+    return { error: "画像アップロードまたは保存に失敗しました" };
   }
 }
 
