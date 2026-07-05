@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { MobileNav } from "@/components/MobileNav";
 
-const LOGO_URL = "https://images.microcms-assets.io/assets/c8b8e61e61564493aacf4db57409a73b/9613468e4c18416ea1464242bb7fb049/fmosaka_officialsite.png";
+const LOGO_URL = "https://images.microcms-assets.io/assets/c8b8e61e61564493aacf4db57409a73b/a4c48dbb41ec4e6d9514ce4f5496ed41/fmosaka_logo.png";
 
 const navItems = [
   { href: "/", label: "HOME" },
