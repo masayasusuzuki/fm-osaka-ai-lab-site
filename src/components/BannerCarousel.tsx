@@ -55,7 +55,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
                   alt={banner.title}
                   fill
                   className="object-cover"
-                  sizes="100vw"
+                  sizes="(max-width: 640px) 100vw, 1024px"
                   priority
                 />
               </div>

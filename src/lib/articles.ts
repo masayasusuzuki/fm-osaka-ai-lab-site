@@ -1,6 +1,16 @@
 import { getAllArticles, getArticleBySlug, MicroCMSArticle } from "@/lib/microcms";
 import { BlogPost, SnsPost } from "@/types";
 
+// 本文内の生 <img>（next/image を通らない）は microCMS の画像変換パラメータで軽量化する。
+// 元の PNG は 2MB 超だが、WebP + 幅制限で数百KB になる。すでにパラメータ付きの URL は触らない
+function optimizeBodyImages(body: string): string {
+  return body.replace(
+    /src="(https:\/\/images\.microcms-assets\.io\/[^"?]+)(\?[^"]*)?"/g,
+    (_m, url: string, qs: string | undefined) =>
+      qs ? `src="${url}${qs}"` : `src="${url}?fm=webp&q=75&w=1600"`
+  );
+}
+
 export function toBlogPost(article: MicroCMSArticle): BlogPost {
   return {
     id: article.id,
@@ -8,7 +18,7 @@ export function toBlogPost(article: MicroCMSArticle): BlogPost {
     title: article.title,
     episodeSlug: article.episodeSlug || "ep01",
     excerpt: article.excerpt,
-    body: article.body,
+    body: optimizeBodyImages(article.body),
     thumbnail: article.thumbnail?.url || "/images/blog/thumb.png",
     snsPosts: [],
     publishedAt: article.published ?? article.createdAt,

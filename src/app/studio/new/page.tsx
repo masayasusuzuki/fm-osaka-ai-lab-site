@@ -41,7 +41,8 @@ function embedImagesForPreview(body: string, imageUrls: string[]): string {
   return body.replace(/<!--\s*IMAGE:\s*(\d+)\s*-->/g, (_, n) => {
     const url = imageUrls[Number(n) - 1] || "";
     if (!url) return "";
-    return `<figure class="my-8"><img src="${url}" alt="" class="w-full rounded-2xl border border-white/10 shadow-lg" /></figure>`;
+    // microCMS の画像変換で軽量配信（WebP・幅1600px上限）
+    return `<figure class="my-8"><img src="${url}?fm=webp&q=75&w=1600" alt="" class="w-full rounded-2xl border border-white/10 shadow-lg" /></figure>`;
   });
 }
 

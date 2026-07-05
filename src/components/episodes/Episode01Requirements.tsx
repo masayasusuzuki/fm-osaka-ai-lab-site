@@ -17,7 +17,14 @@ const SLIDE_URLS = {
 function SlideFigure({ src, alt }: { src: string; alt: string }) {
   return (
     <figure className="overflow-hidden rounded-2xl border border-border shadow-xl">
-      <Image src={src} alt={alt} width={1536} height={1024} className="h-auto w-full" />
+      <Image
+        src={src}
+        alt={alt}
+        width={1536}
+        height={1024}
+        className="h-auto w-full"
+        sizes="(max-width: 1024px) 100vw, 1024px"
+      />
     </figure>
   );
 }
