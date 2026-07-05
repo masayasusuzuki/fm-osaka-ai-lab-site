@@ -20,16 +20,15 @@ const navItems = [
 
 function LogoImage() {
   return (
-    <div className="relative h-10 w-auto">
-      <Image
-        src={LOGO_URL}
-        alt="FM OSAKA"
-        width={160}
-        height={40}
-        className="h-10 w-auto object-contain"
-        priority
-      />
-    </div>
+    <Image
+      src={LOGO_URL}
+      alt="FM OSAKA"
+      width={160}
+      height={40}
+      className="object-contain"
+      style={{ width: "auto", height: "40px" }}
+      priority
+    />
   );
 }
 
