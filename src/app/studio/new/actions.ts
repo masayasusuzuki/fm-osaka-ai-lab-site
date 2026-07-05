@@ -1,7 +1,8 @@
 "use server";
 
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import { createArticle, updateArticle } from "@/lib/microcms";
+import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -21,13 +22,24 @@ function getErrorMessage(err: unknown): string {
   return JSON.stringify(err);
 }
 
-export async function transcribeAudio(formData: FormData): Promise<{ text: string; error?: string }> {
+// 音声はブラウザから Supabase Storage に直接アップロードし、ここにはパスだけを渡す。
+// Vercel のサーバーレス関数はリクエストボディ 4.5MB 制限があり、
+// 音声ファイルを Server Action に直接 POST すると 413 (Content Too Large) になるため。
+export async function transcribeAudio(storagePath: string): Promise<{ text: string; error?: string }> {
+  const supabase = await createSupabaseServerClient();
   try {
-    const file = formData.get("audio") as File;
-    if (!file) return { text: "", error: "音声ファイルが見つかりません" };
+    if (!storagePath) return { text: "", error: "音声ファイルが見つかりません" };
 
+    // Supabase Storage から音声をダウンロード（ログイン中ユーザーのセッションで認可）
+    const { data, error } = await supabase.storage.from("audio-uploads").download(storagePath);
+    if (error || !data) {
+      return { text: "", error: `音声の取得に失敗しました: ${error?.message ?? "unknown"}` };
+    }
+
+    const buffer = Buffer.from(await data.arrayBuffer());
+    const filename = storagePath.split("/").pop() || "audio.mp3";
     const transcription = await openai.audio.transcriptions.create({
-      file,
+      file: await toFile(buffer, filename),
       model: "whisper-1",
       language: "ja",
     });
@@ -36,6 +48,15 @@ export async function transcribeAudio(formData: FormData): Promise<{ text: strin
   } catch (err) {
     console.error(err);
     return { text: "", error: `文字起こしに失敗しました: ${getErrorMessage(err)}` };
+  } finally {
+    // 文字起こし後は音声を残さない（削除失敗しても本処理は止めない）
+    try {
+      if (storagePath) {
+        await supabase.storage.from("audio-uploads").remove([storagePath]);
+      }
+    } catch {
+      // noop
+    }
   }
 }
 

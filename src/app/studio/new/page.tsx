@@ -13,6 +13,7 @@ import {
   GeneratedImages,
 } from "./actions";
 import { episodes } from "@/lib/content";
+import { createClient } from "@/lib/supabase/client";
 import {
   Upload,
   Loader2,
@@ -94,9 +95,23 @@ export default function NewArticlePage() {
     if (!file) return;
     setLoading(true);
     setError(null);
-    const formData = new FormData();
-    formData.append("audio", file);
-    const result = await transcribeAudio(formData);
+
+    // Vercel の 4.5MB リクエスト制限を回避するため、
+    // 音声はブラウザから Supabase Storage に直接アップロードし、サーバーにはパスだけ渡す
+    const supabase = createClient();
+    const ext = file.name.split(".").pop()?.toLowerCase() || "mp3";
+    const storagePath = `uploads/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("audio-uploads")
+      .upload(storagePath, file, { contentType: file.type || "audio/mpeg" });
+
+    if (uploadError) {
+      setLoading(false);
+      setError(`音声のアップロードに失敗しました: ${uploadError.message}`);
+      return;
+    }
+
+    const result = await transcribeAudio(storagePath);
     setLoading(false);
     if (result.error) {
       setError(result.error);

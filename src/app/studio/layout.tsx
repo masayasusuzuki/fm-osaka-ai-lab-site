@@ -7,6 +7,10 @@ export const metadata = {
   description: "FM OSAKA AI LAB 管理画面",
 };
 
+// 文字起こし・記事生成・画像生成の Server Action は数分かかるため、
+// Vercel の関数タイムアウトを延長する（Pro プランで最大300秒）
+export const maxDuration = 300;
+
 export default async function StudioLayout({
   children,
 }: {
