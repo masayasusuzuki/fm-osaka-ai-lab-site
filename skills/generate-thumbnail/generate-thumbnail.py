@@ -12,6 +12,7 @@ FM OSAKA AI LAB 記事サムネイル生成スクリプト
 import argparse
 import base64
 import json
+import os
 import re
 import sys
 from io import BytesIO
@@ -22,15 +23,17 @@ from PIL import Image
 
 
 def load_api_key() -> str:
-    """プロジェクトルートの .env から OPENAI_API_KEY を読み込む。"""
-    root = Path(__file__).resolve().parents[4]
-    env_path = root / ".env"
-    if not env_path.exists():
-        raise FileNotFoundError(f".env not found at {env_path}")
-    for line in env_path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("OPENAI_API_KEY="):
-            return line.split("=", 1)[1].strip()
-    raise ValueError("OPENAI_API_KEY not found in .env")
+    """環境変数 OPENAI_API_KEY、なければ上位ディレクトリの .env / .env.local から読み込む。"""
+    if os.environ.get("OPENAI_API_KEY"):
+        return os.environ["OPENAI_API_KEY"]
+    for parent in Path(__file__).resolve().parents:
+        for name in (".env", ".env.local"):
+            env_path = parent / name
+            if env_path.exists():
+                for line in env_path.read_text(encoding="utf-8").splitlines():
+                    if line.startswith("OPENAI_API_KEY="):
+                        return line.split("=", 1)[1].strip()
+    raise ValueError("OPENAI_API_KEY not found in environment, .env, or .env.local")
 
 
 def slugify(text: str) -> str:
@@ -57,18 +60,17 @@ def build_json_prompt(article: dict) -> str:
     visual_direction = (
         f"中央に巨大な黒文字で『{main_keyword_1}と{main_keyword_2}』。"
         f"上部にピンクのリボンで『注目トピック』。"
-        f"右側に大きなリアルな{main_keyword_1}。"
-        f"左下に{main_keyword_2}のパドルとボール。"
+        f"右側に{main_keyword_1}を象徴する大きなリアルなオブジェクト。"
+        f"左下に{main_keyword_2}を象徴するオブジェクト。"
         f"下部に{location}の街並み。"
         f"左上に{program_name}。"
         f"左中央に{broadcast_date} ON AIR! のピンクスプラッシュ。"
-        f"右上に{location}現地リポートの吹き出し。"
+        f"右上に{location}リポートの吹き出し。"
     )
 
     important_objects = [
-        f"リアルな{main_keyword_1}",
-        f"{main_keyword_2}のパドル",
-        f"{main_keyword_2}のボール",
+        f"{main_keyword_1}を象徴するリアルなオブジェクト",
+        f"{main_keyword_2}を象徴するオブジェクト",
         f"{location}の都市風景",
         "レトロラジオ",
         "マイク",
@@ -99,9 +101,9 @@ def build_json_prompt(article: dict) -> str:
     )
 
     example_prompt_filled = api_prompt_filled + (
-        f" On the right side, place a large realistic delicious {main_keyword_1} as a cutout object. "
-        f"On the bottom-left, place a {main_keyword_2} paddle and ball with a label reading {main_keyword_2}. "
-        f"Along the bottom, add a {location} city skyline and a small {main_keyword_2} scene with players. "
+        f" On the right side, place a large realistic cutout object representing {main_keyword_1}. "
+        f"On the bottom-left, place an object representing {main_keyword_2} with a label reading {main_keyword_2}. "
+        f"Along the bottom, add a {location} city skyline. "
         "Add a retro yellow radio and microphone near the left side."
     )
 
@@ -253,7 +255,7 @@ def build_json_prompt(article: dict) -> str:
                 "rule_3": f"main_keyword_2({main_keyword_2})がスポーツなら、左下または下部にスポーツ道具・競技シーンを配置する。",
                 "rule_4": f"location({location})がある場合は、下部に都市シルエットや現地の空気感を追加する。",
                 "rule_5": f"broadcast_date({broadcast_date})はON AIRステッカーやカレンダー風バッジで表示する。",
-                "rule_6": "summaryは1行の小さなラベルにする。長文は禁止。"
+                "rule_6": "summaryは1行の小さなラベルにする。長文は禁止。",
                 "rule_7": f"番組名({program_name})は左上にロゴ風に配置し、FM大阪感・ラジオ局感を強める。",
                 "rule_8": "すべての記事で同じテンプレート感を維持しつつ、主題オブジェクトとキーワードだけを差し替えられる設計にする。",
             },
