@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/SectionHeader";
 import { FadeIn } from "@/components/FadeIn";
@@ -103,6 +104,17 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
               <p className="mt-4 leading-relaxed text-muted-foreground">
                 {episode.description}
               </p>
+              {episode.episodeNumber === 2 && (
+                <a
+                  href="https://masayasusuzuki-reporter-finder-app-raynds.streamlit.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-fm-orange px-5 py-2.5 text-sm font-black text-white shadow-lg transition-all hover:brightness-110"
+                >
+                  実際のツールを触ってみる
+                  <ArrowUpRight className="h-4 w-4" />
+                </a>
+              )}
             </div>
           </div>
         </div>

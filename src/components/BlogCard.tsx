@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { BlogPost, Episode } from "@/types";
 import { cn } from "@/lib/utils";
 import { Calendar, ArrowRight } from "lucide-react";
@@ -14,7 +13,7 @@ interface BlogCardProps {
   compact?: boolean;
 }
 
-export function BlogCard({ post, episode, compact = false }: BlogCardProps) {
+export function BlogCard({ post, compact = false }: BlogCardProps) {
   return (
     <Link href={`/blog/${post.slug}`} className="group block">
       <Card
@@ -52,17 +51,6 @@ export function BlogCard({ post, episode, compact = false }: BlogCardProps) {
         </div>
         <CardContent className={cn(compact ? "p-4" : "p-5")}>
           <div className={cn("flex items-center gap-2", compact ? "mb-2" : "mb-3")}>
-            {episode && (
-              <Badge
-                variant="outline"
-                className={cn(
-                  "border-fm-pink text-fm-pink transition-colors group-hover:bg-fm-pink group-hover:text-white",
-                  compact ? "text-[10px]" : "text-xs"
-                )}
-              >
-                EP{String(episode.episodeNumber).padStart(2, "0")}
-              </Badge>
-            )}
             <time
               className={cn(
                 "flex items-center gap-1 text-muted-foreground",

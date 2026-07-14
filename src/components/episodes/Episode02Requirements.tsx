@@ -1,5 +1,28 @@
 import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// 実際に動くツール（Streamlit Community Cloud にホスティング済み）
+const TOOL_URL = "https://masayasusuzuki-reporter-finder-app-raynds.streamlit.app/";
+
+function ToolButton({ onDark = false }: { onDark?: boolean }) {
+  return (
+    <a
+      href={TOOL_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "inline-flex w-fit items-center gap-2 rounded-full px-6 py-3 text-sm font-black shadow-lg transition-all",
+        onDark
+          ? "bg-white text-fm-dark hover:bg-white/90"
+          : "bg-fm-orange text-white hover:brightness-110"
+      )}
+    >
+      実際のツールを触ってみる
+      <ArrowUpRight className="h-4 w-4" />
+    </a>
+  );
+}
 
 /* ────────────────────────────────────────────────────────────────
    EP02: 「海外レポーター候補リサーチツール」（Streamlit + Python）の
@@ -210,6 +233,9 @@ export function Episode02Requirements() {
           海外のブログから「今も活動していて、連絡先もありそうな人」の候補リストが自動でできあがります。
           専門用語が多く出てきますが、その都度かみくだいて説明するので、AIにくわしくない方も安心して読み進めてください。
         </p>
+        <div className="mt-6">
+          <ToolButton />
+        </div>
         <div className="mt-8">
           <SlideFigure slideKey="title" alt="海外レポーター候補さがしの自動化 - 解説スライド" />
         </div>
@@ -409,6 +435,9 @@ export function Episode02Requirements() {
         </p>
         <div className="relative mt-6">
           <SlideFigure slideKey="summary" alt="材料集めはAI、判断は人間 - 解説スライド" />
+        </div>
+        <div className="relative mt-6">
+          <ToolButton onDark />
         </div>
         <p className="relative mt-4 max-w-3xl text-sm leading-relaxed text-white/60">
           ※ この仕組みは、実際に動く海外レポーター候補リサーチツール（Python + Streamlit 製）として作られています。
