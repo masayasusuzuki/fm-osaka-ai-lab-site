@@ -7,6 +7,20 @@ export const siteDescription =
 
 export const episodes: Episode[] = [
   {
+    id: "ep00",
+    slug: "ep00",
+    episodeNumber: 0,
+    title: "プレ配信：AIブログ生成のテスト回",
+    theme: "パイロット / 事前検証",
+    description:
+      "正式始動の前に、AIが情報収集からブログ記事化までを試したプレ回。海外の話題を題材に、生成フローの手応えを確かめました。",
+    longDescription:
+      "第0回（プレ配信）は、コーナー正式始動の前に AI によるブログ生成フローを試した回です。ベトナム・ホーチミンの最新トピックを題材に、情報収集から記事の下書き生成までを AI に任せ、どこまで実用に耐えるかを検証しました。ここで得た手応えをもとに、第1回以降の運用フローを固めています。",
+    thumbnail: "https://placehold.co/800x450/00AEEF/FFFFFF/png?text=EP00",
+    publishedAt: "2026-07-05",
+    accentColor: "blue",
+  },
+  {
     id: "ep01",
     slug: "ep01",
     episodeNumber: 1,
@@ -33,7 +47,6 @@ export const episodes: Episode[] = [
     thumbnail: "https://placehold.co/800x450/F7931E/FFFFFF/png?text=EP02",
     publishedAt: "2026-07-21",
     accentColor: "orange",
-    locked: true,
   },
   {
     id: "ep03",

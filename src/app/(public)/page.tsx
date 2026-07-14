@@ -14,7 +14,7 @@ import { banners, getEpisodeBySlug } from "@/lib/content";
 import { getRecentBlogPostsAsync } from "@/lib/articles";
 
 export default async function Home() {
-  const recentPosts = await getRecentBlogPostsAsync(1);
+  const recentPosts = await getRecentBlogPostsAsync(3);
 
   return (
     <div className="relative flex flex-col gap-16 pb-16 overflow-hidden">
@@ -55,7 +55,7 @@ export default async function Home() {
           centered
         />
 
-        <div className="mx-auto grid max-w-2xl gap-6">
+        <div className="mx-auto grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {recentPosts.map((post, index) => (
             <FadeIn key={post.id} delay={index * 0.1}>
               <BlogCard

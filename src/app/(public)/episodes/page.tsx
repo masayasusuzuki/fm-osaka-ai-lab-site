@@ -24,11 +24,14 @@ export default function EpisodesPage() {
       />
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {episodes.map((episode, index) => (
-          <FadeIn key={episode.id} delay={index * 0.1}>
-            <EpisodeCard episode={episode} />
-          </FadeIn>
-        ))}
+        {/* 全4回の企画。ep00 はブログ用のプロローグ扱いなので一覧には出さない */}
+        {episodes
+          .filter((episode) => episode.episodeNumber >= 1)
+          .map((episode, index) => (
+            <FadeIn key={episode.id} delay={index * 0.1}>
+              <EpisodeCard episode={episode} />
+            </FadeIn>
+          ))}
       </div>
     </div>
   );

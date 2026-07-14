@@ -7,7 +7,7 @@ import { getBlogPostsByEpisodeAsync } from "@/lib/articles";
 import { episodes, getEpisodeBySlug } from "@/lib/content";
 import { cn } from "@/lib/utils";
 import { Episode01Requirements } from "@/components/episodes/Episode01Requirements";
-import { Episode02Demo } from "@/components/episodes/Episode02Demo";
+import { Episode02Requirements } from "@/components/episodes/Episode02Requirements";
 import { Episode03Demo } from "@/components/episodes/Episode03Demo";
 import { Episode04Demo } from "@/components/episodes/Episode04Demo";
 import { BlogCard } from "@/components/BlogCard";
@@ -117,7 +117,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
         </div>
       </FadeIn>
 
-      {/* EP01: 記事作成機能の要件定義解説（AI初学者向け） */}
+      {/* 要件定義解説（AI初学者向け）。デモUIから解説コンポーネントへ移行済み（docs/requirements.md §0-B / §9） */}
       {episode.episodeNumber === 1 && (
         <FadeIn>
           <div className="mt-10">
@@ -125,12 +125,18 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
           </div>
         </FadeIn>
       )}
-
-      {/* EP01 のデモセクションは要件定義解説に置き換えたため表示しない */}
-      {episode.episodeNumber !== 1 && (
+      {episode.episodeNumber === 2 && (
         <FadeIn>
           <div className="mt-10">
-            {episode.episodeNumber === 2 && <Episode02Demo />}
+            <Episode02Requirements />
+          </div>
+        </FadeIn>
+      )}
+
+      {/* EP03・EP04 は未移行のためデモUIを表示 */}
+      {(episode.episodeNumber === 3 || episode.episodeNumber === 4) && (
+        <FadeIn>
+          <div className="mt-10">
             {episode.episodeNumber === 3 && <Episode03Demo />}
             {episode.episodeNumber === 4 && <Episode04Demo />}
           </div>

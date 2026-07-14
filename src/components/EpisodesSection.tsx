@@ -66,13 +66,15 @@ export function EpisodesSection() {
           </motion.div>
         </div>
 
-        {/* Cards */}
+        {/* Cards（全4回の企画。ep00 はブログ用のプロローグ扱いなので一覧には出さない） */}
         <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {episodes.map((episode, index) => (
-            <FadeIn key={episode.id} delay={index * 0.1}>
-              <EpisodeCard episode={episode} />
-            </FadeIn>
-          ))}
+          {episodes
+            .filter((episode) => episode.episodeNumber >= 1)
+            .map((episode, index) => (
+              <FadeIn key={episode.id} delay={index * 0.1}>
+                <EpisodeCard episode={episode} />
+              </FadeIn>
+            ))}
         </div>
 
         {/* Decorative footer */}
