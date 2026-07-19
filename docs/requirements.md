@@ -19,7 +19,7 @@
 - 内容: そのエピソードで作ったツールの **要件定義・仕組み・設計思想** を、非エンジニア／AI初学者向けに作り込んで解説する
 - 実装の見本: `Episode01Requirements.tsx`（EP01）。構成は「イントロ→用語メモ→登場するAI→ステップ解説→決めたルール→まとめ」＋解説スライド画像
 - ページへの差し込み: `src/app/(public)/episodes/[slug]/page.tsx` が `episode.episodeNumber` で出し分ける
-- 一次情報（作り込みのソース）: 要件定義 `../../requirements-epNN-tool.md`、要望メール `../../mail-logs/`、完成したツール本体（`../../tools/` 等）
+- 一次情報（作り込みのソース）: 要件定義 `../../tools/{ツール名}/requirements.md`（ep01=`fm-radio-blog`、ep02=`reporter-finder`、ep03=`onair-song-checker`）、要望メール `../../mail-logs/`、完成したツール本体（`../../tools/` 等）
 - **呼ばれ方**: 「解説記事」「全4回のAI実験の方」「episodes/epNN のやつ」「EP01を参考に」→ これ。**blog ではない**
 
 ### 取り違えないためのルール（厳守）

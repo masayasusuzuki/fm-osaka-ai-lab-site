@@ -31,7 +31,7 @@ function ToolButton({ onDark = false }: { onDark?: boolean }) {
 
    ソース:
    - 完成ツール本体: ../../../tools/reporter-finder/（app.py / src/*.py）
-   - 要件定義: ../../../requirements-ep02-tool.md
+   - 要件定義: ../../../tools/reporter-finder/requirements.md
    - 要望メール: ../../../mail-logs/2026-07-13_overseas-reporter-request.md
 
    ※ 解説スライド画像（EP01 と同じ live-lectures スライドパイプラインで作成予定）は
