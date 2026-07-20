@@ -9,7 +9,7 @@ import { episodes, getEpisodeBySlug } from "@/lib/content";
 import { cn } from "@/lib/utils";
 import { Episode01Requirements } from "@/components/episodes/Episode01Requirements";
 import { Episode02Requirements } from "@/components/episodes/Episode02Requirements";
-import { Episode03Demo } from "@/components/episodes/Episode03Demo";
+import { Episode03Requirements } from "@/components/episodes/Episode03Requirements";
 import { Episode04Demo } from "@/components/episodes/Episode04Demo";
 import { BlogCard } from "@/components/BlogCard";
 
@@ -145,12 +145,19 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
         </FadeIn>
       )}
 
-      {/* EP03・EP04 は未移行のためデモUIを表示 */}
-      {(episode.episodeNumber === 3 || episode.episodeNumber === 4) && (
+      {episode.episodeNumber === 3 && (
         <FadeIn>
           <div className="mt-10">
-            {episode.episodeNumber === 3 && <Episode03Demo />}
-            {episode.episodeNumber === 4 && <Episode04Demo />}
+            <Episode03Requirements />
+          </div>
+        </FadeIn>
+      )}
+
+      {/* EP04 は未移行のためデモUIを表示 */}
+      {episode.episodeNumber === 4 && (
+        <FadeIn>
+          <div className="mt-10">
+            <Episode04Demo />
           </div>
         </FadeIn>
       )}

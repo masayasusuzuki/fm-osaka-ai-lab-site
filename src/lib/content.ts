@@ -61,7 +61,6 @@ export const episodes: Episode[] = [
     thumbnail: "https://placehold.co/800x450/00AEEF/FFFFFF/png?text=EP03",
     publishedAt: "2026-07-28",
     accentColor: "blue",
-    locked: true,
   },
   {
     id: "ep04",
